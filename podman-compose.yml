@@ -1,0 +1,13 @@
+name: team10
+networks:
+  core-network:
+    external: true
+services:
+  frontend:
+    image: localhost:5000/team10/frontend:dev
+    networks: [core-network]
+    ports: ["8080:80"]
+  api:
+    image: localhost:5000/team10/api:dev
+    networks: [core-network]
+    ports: ["8081:8081"]
