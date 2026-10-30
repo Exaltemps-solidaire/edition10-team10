@@ -80,17 +80,39 @@
     - `frontend/src/app/rapport/page.module.css` : styles de l'écran 2, repris du prototype.
     - `e2e/demo.spec.ts` : 2 étapes ajoutées (rédaction du rapport, retour à l'écran 1).
 
-## Itération 3 : Stabilisation avant le pitch
+**Temps restant annoncé avant l'itération 3** : ~30 minutes.
 
-- **Dans le périmètre** : selon le temps réellement restant après l'itération 2 (à redemander), corriger ce qui bloque la démo (affichage, liens morts, routes `/health` `/sante`), et seulement si le temps le permet, rendre la capture perceptible (ex. l'action « Capturer ce que j'entends » incrémente le nombre de « notes capturées » affiché en écran 2).
-- **Hors périmètre** : tout ce qui est listé en hors-périmètre global ci-dessus.
-- **Critères d'acceptation** : à préciser au moment de l'itération, selon ce qui reste à stabiliser.
+## Itération 3 : L'action « Capturer ce que j'entends » rend le nombre de notes capturées réel, au lieu d'un texte figé
+
+- **Dans le périmètre** : rien ne bloque la démo actuelle (vérifié : navigation, `/health`, `/sante` tous au vert) — l'itération se consacre donc au petit plus prévu. L'action « Capturer ce que j'entends » de l'écran 1 n'ouvre plus l'écran 2 : elle incrémente un compteur de notes capturées (persisté en local, visible aussi sur l'écran 1). L'écran 2 affiche ce nombre réel (accord singulier/pluriel) à la place du texte figé « 3 points clés ».
+- **Hors périmètre** : tout ce qui est listé en hors-périmètre global en tête de ce fichier (capture audio réelle, rapport généré par IA, multi-dossiers, envoi réel au magistrat).
+- **Critères d'acceptation** :
+  - Étant donné l'écran 1, quand je clique plusieurs fois « Capturer ce que j'entends », alors le nombre de notes capturées affiché augmente à chaque clic, sans naviguer.
+  - Étant donné des notes capturées sur l'écran 1, quand j'ouvre l'écran 2, alors la bannière affiche ce nombre réel, avec un accord singulier/pluriel correct (0, 1, plusieurs).
+  - Étant donné l'écran 2, les autres éléments (rapport, boutons « Envoyer au magistrat » / « Reprendre plus tard ») restent inchangés et fonctionnels.
 - **Hypothèse de l'équipe couverte** : aucune, non produite dans la passation.
-- **Codage estimé** : à redéfinir selon le temps restant réel (≤10 minutes).
-- **Fichiers prévus** : à déterminer selon ce qui casse.
-- **Tests unitaires prévus** : à déterminer.
-- **Étapes ajoutées à la démo** : à déterminer.
-- **Bilan** : _à remplir en fin d'itération._
+- **Codage estimé** : 8 minutes.
+- **Fichiers prévus** : `frontend/src/lib/notes.ts` (fonction de formatage + lecture/écriture du compteur), `frontend/src/lib/notes.test.ts`, `frontend/src/app/page.tsx`, `frontend/src/app/page.module.css`, `frontend/src/app/rapport/page.tsx`.
+- **Tests unitaires prévus** : 3 tests Vitest sur la fonction de formatage (0 note, 1 note, plusieurs notes — accord singulier/pluriel).
+- **Étapes ajoutées à la démo** : cliquer deux fois « Capturer ce que j'entends », ouvrir le rapport, vérifier que le nombre affiché est bien 2.
+- **Bilan** :
+  - Durée de codage réelle : 1 minute pour le compteur. Pas de dépassement, pas d'alarme.
+  - ⚠️ **Trouvé en testant le clic réel (pas seulement en lisant le rendu HTML)** : le bouton « Capturer ce que j'entends » n'incrémentait rien du tout. Cause : la CSP posée en itération 1 (`script-src 'self'`) bloquait les `<script>` inline que l'export statique de Next.js embarque pour ses données RSC — React ne s'hydratait jamais (erreur React #412 en console), donc **aucun `onClick` de l'application ne répondait**, y compris le bouton « Envoyer au magistrat » de l'itération 2, qui n'avait jamais vraiment fonctionné non plus (son retour visuel n'était tout simplement jamais testé en clic réel). Corrigé en ajoutant `'unsafe-inline'` à `script-src` dans `frontend/nginx.conf` : seule option réaliste pour un export statique sans serveur capable de poser un nonce par requête. Compromis documenté en commentaire dans le fichier.
+  - Critères d'acceptation satisfaits : les 3, **une fois le correctif CSP appliqué** (compteur incrémenté à chaque clic sans navigation, accord singulier/pluriel correct sur l'écran 2, reste de l'écran 2 inchangé).
+  - `npm test` : 5 tests passent (2 existants + 3 nouveaux sur `formatNotesCapturees` : 0, 1, plusieurs notes).
+  - Contrat de déployabilité : `./scripts/verifier-deployabilite.sh` → aucune borne, aucune alarme.
+  - Déploiement : image frontend reconstruite deux fois (une pour la fonctionnalité, une pour le correctif CSP) et republiée. `podman compose ... up -d --force-recreate` relancé après chaque build. `localhost:8080/`, `/rapport`, `/health`, `/sante`, `localhost:8081/health`, `/sante` tous à 200.
+  - Version 3 signalée à PM Lab avec succès (`moteur_avance: false`).
+  - Démo (`e2e/demo.spec.ts`) mise à jour (double clic sur « Capturer... », vérification du nombre sur l'écran 2), verte contre `localhost:8080` seulement après le correctif CSP (elle échouait avant, confirmant le bug).
+  - Rien n'a été bloqué par le harnais.
+  - **Modifications** :
+    - `frontend/src/lib/notes.ts` : fonction pure `formatNotesCapturees` (accord singulier/pluriel) + lecture/écriture du compteur en `localStorage` (critères 1, 2).
+    - `frontend/src/lib/notes.test.ts` : 3 tests Vitest sur l'accord (0, 1, plusieurs) (DoD point 2).
+    - `frontend/src/app/page.tsx` : « Capturer ce que j'entends » devient un bouton qui incrémente le compteur et affiche un badge, au lieu d'un lien vers l'écran 2 (critère 1).
+    - `frontend/src/app/page.module.css` : styles du bouton (reset) et du badge (critère 1).
+    - `frontend/src/app/rapport/page.tsx` : la bannière de notes capturées affiche le nombre réel au lieu du texte figé « 3 points clés » (critère 2).
+    - `frontend/nginx.conf` : ajout de `'unsafe-inline'` à `script-src` dans la CSP — corrige l'hydratation React cassée depuis l'itération 1, bloquante pour tout clic de l'application (critères 1, 2, 3, et rétroactivement le critère 3 de l'itération 2).
+    - `e2e/demo.spec.ts` : étape ajoutée (double capture + vérification du nombre sur l'écran 2).
 
 ## À venir (non détaillé)
 

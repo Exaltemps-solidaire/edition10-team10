@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { formatNotesCapturees, lireNotesCapturees } from "../../lib/notes";
 import styles from "./page.module.css";
 
 const RAPPORT =
@@ -9,6 +10,9 @@ const RAPPORT =
 
 export default function Rapport() {
   const [envoye, setEnvoye] = useState(false);
+  const [notesCapturees] = useState(() =>
+    typeof window === "undefined" ? 0 : lireNotesCapturees(),
+  );
 
   return (
     <div className={styles.page}>
@@ -23,9 +27,7 @@ export default function Rapport() {
           Cet écran est en cours de réflexion – son contenu reste à préciser.
         </div>
 
-        <div className={styles.noteCapture}>
-          ✦ Notes capturées : 3 points clés repérés pendant l&apos;échange
-        </div>
+        <div className={styles.noteCapture}>{formatNotesCapturees(notesCapturees)}</div>
 
         <div className={styles.rapportBloc}>
           <span className={styles.tagIa}>Rédigé par l&apos;assistant</span>

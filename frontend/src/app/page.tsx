@@ -1,7 +1,15 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { incrementerNotesCapturees, lireNotesCapturees } from "../lib/notes";
 import styles from "./page.module.css";
 
 export default function Home() {
+  const [notesCapturees, setNotesCapturees] = useState(() =>
+    typeof window === "undefined" ? 0 : lireNotesCapturees(),
+  );
+
   return (
     <div className={styles.page}>
       <div className={styles.phone}>
@@ -35,10 +43,17 @@ export default function Home() {
 
         <div className={styles.sectionTitle}>Que faire maintenant ?</div>
         <div className={styles.actionList}>
-          <Link href="/rapport" className={styles.actionItem}>
-            <span className={styles.actionItemText}>Capturer ce que j&apos;entends</span>
+          <button
+            type="button"
+            className={styles.actionItem}
+            onClick={() => setNotesCapturees(incrementerNotesCapturees())}
+          >
+            <span className={styles.actionItemText}>
+              Capturer ce que j&apos;entends
+              {notesCapturees > 0 && <span className={styles.badge}>{notesCapturees}</span>}
+            </span>
             <span className={styles.actionItemArrow}>›</span>
-          </Link>
+          </button>
           <Link href="/rapport" className={styles.actionItem}>
             <span className={styles.actionItemText}>Rédiger le rapport d&apos;intervention</span>
             <span className={styles.actionItemArrow}>›</span>
