@@ -47,6 +47,8 @@
     - `podman-compose.yml` : écrit à la racine, suit la recette du `/CLAUDE.md` du serveur (critère 4 — déploiement).
     - `e2e/demo.spec.ts` : étape ajoutée (vérifie la fiche famille affichée).
 
+**Temps restant annoncé avant l'itération 2** : ~60 minutes ou plus (temps rallongé depuis la planification initiale).
+
 ## Itération 2 : Le parcours va jusqu'au rapport pré-rédigé, écran par écran
 
 - **Dans le périmètre** :
@@ -62,7 +64,21 @@
 - **Fichiers prévus** : nouvelle route `frontend/src/app/rapport/page.tsx` (ou composant de bascule d'écran dans `page.tsx` selon ce qui va plus vite), styles associés, éventuel composant partagé pour la fiche famille.
 - **Tests unitaires prévus** : si la navigation s'appuie sur une fonction pure (ex. résolveur d'état d'écran), 1 test dessus ; sinon aucun (balisage pur).
 - **Étapes ajoutées à la démo** : cliquer « Rédiger le rapport d'intervention », vérifier le texte du rapport, cliquer « Reprendre plus tard », vérifier le retour écran 1.
-- **Bilan** : _à remplir en fin d'itération._
+- **Bilan** :
+  - Durée de codage réelle : 4 minutes (bien en dessous des 10 minutes, pas de dépassement, pas d'alarme déclenchée).
+  - Critères d'acceptation satisfaits : les 3 (navigation écran 1 → écran 2 avec le rapport affiché, « Reprendre plus tard » ramène à l'écran 1, « Envoyer au magistrat » ne casse rien — retour visuel minimal : le libellé du bouton passe à « Envoyé ✓ »).
+  - `npm test` : 2 tests passent (aucun test unitaire ajouté : navigation et balisage purs, pas de nouvelle logique métier — conforme à ce qui était prévu).
+  - Contrat de déployabilité : `./scripts/verifier-deployabilite.sh` → aucune borne, aucune alarme.
+  - Déploiement : image frontend reconstruite et republiée (`localhost:5000/team10/frontend:dev`), l'API n'a pas changé donc pas reconstruite. `podman compose ... up -d --force-recreate` relancé. `localhost:8080/`, `/rapport`, `/health`, `/sante` à 200 ; `localhost:8081/health` et `/sante` à 200.
+  - Version 2 signalée à PM Lab avec succès (`moteur_avance: false`).
+  - Démo (`e2e/demo.spec.ts`) mise à jour avec les 2 nouvelles étapes (rédaction du rapport, retour écran 1), verte contre `localhost:8080`.
+  - Rien n'a été bloqué par le harnais.
+  - **Modifications** :
+    - `frontend/src/app/page.tsx` : les 3 actions de l'écran 1 deviennent des `next/link` vers `/rapport` (critère 1).
+    - `frontend/src/app/page.module.css` : `text-decoration: none` et `color: inherit` sur `.actionItem`, devenu un lien (critère 1 — rendu inchangé).
+    - `frontend/src/app/rapport/page.tsx` : nouvel écran 2 (« Rédiger le rapport »), composant client pour le retour visuel minimal du bouton « Envoyer au magistrat », lien « Reprendre plus tard » vers `/` (critères 1, 2, 3).
+    - `frontend/src/app/rapport/page.module.css` : styles de l'écran 2, repris du prototype.
+    - `e2e/demo.spec.ts` : 2 étapes ajoutées (rédaction du rapport, retour à l'écran 1).
 
 ## Itération 3 : Stabilisation avant le pitch
 

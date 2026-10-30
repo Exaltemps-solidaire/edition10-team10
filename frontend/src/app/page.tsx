@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -34,18 +35,18 @@ export default function Home() {
 
         <div className={styles.sectionTitle}>Que faire maintenant ?</div>
         <div className={styles.actionList}>
-          <div className={styles.actionItem}>
+          <Link href="/rapport" className={styles.actionItem}>
             <span className={styles.actionItemText}>Capturer ce que j&apos;entends</span>
             <span className={styles.actionItemArrow}>›</span>
-          </div>
-          <div className={styles.actionItem}>
+          </Link>
+          <Link href="/rapport" className={styles.actionItem}>
             <span className={styles.actionItemText}>Rédiger le rapport d&apos;intervention</span>
             <span className={styles.actionItemArrow}>›</span>
-          </div>
-          <div className={styles.actionItem}>
+          </Link>
+          <Link href="/rapport" className={styles.actionItem}>
             <span className={styles.actionItemText}>Envoyer au magistrat</span>
             <span className={styles.actionItemArrow}>›</span>
-          </div>
+          </Link>
         </div>
       </div>
     </div>
