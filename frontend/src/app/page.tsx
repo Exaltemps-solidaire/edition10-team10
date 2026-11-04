@@ -2,13 +2,24 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { incrementerNotesCapturees, lireNotesCapturees } from "../lib/notes";
+import { enregistrerNote, lireNotes } from "../lib/notes";
 import styles from "./page.module.css";
 
 export default function Home() {
-  const [notesCapturees, setNotesCapturees] = useState(() =>
-    typeof window === "undefined" ? 0 : lireNotesCapturees(),
+  const [notes, setNotes] = useState<string[]>(() =>
+    typeof window === "undefined" ? [] : lireNotes(),
   );
+  const [captureOuverte, setCaptureOuverte] = useState(false);
+  const [texteNote, setTexteNote] = useState("");
+
+  function validerNote() {
+    const majour = enregistrerNote(texteNote);
+    if (majour.length !== notes.length) {
+      setNotes(majour);
+      setTexteNote("");
+      setCaptureOuverte(false);
+    }
+  }
 
   return (
     <div className={styles.page}>
@@ -46,14 +57,31 @@ export default function Home() {
           <button
             type="button"
             className={styles.actionItem}
-            onClick={() => setNotesCapturees(incrementerNotesCapturees())}
+            onClick={() => setCaptureOuverte(true)}
           >
             <span className={styles.actionItemText}>
               Capturer ce que j&apos;entends
-              {notesCapturees > 0 && <span className={styles.badge}>{notesCapturees}</span>}
+              {notes.length > 0 && <span className={styles.badge}>{notes.length}</span>}
             </span>
             <span className={styles.actionItemArrow}>›</span>
           </button>
+
+          {captureOuverte && (
+            <div className={styles.captureForm}>
+              <textarea
+                className={styles.captureInput}
+                value={texteNote}
+                onChange={(e) => setTexteNote(e.target.value)}
+                placeholder="Ce que je retiens de l'échange..."
+                rows={3}
+                autoFocus
+              />
+              <button type="button" className={styles.captureValider} onClick={validerNote}>
+                Valider la note
+              </button>
+            </div>
+          )}
+
           <Link href="/rapport" className={styles.actionItem}>
             <span className={styles.actionItemText}>Rédiger le rapport d&apos;intervention</span>
             <span className={styles.actionItemArrow}>›</span>
@@ -63,6 +91,19 @@ export default function Home() {
             <span className={styles.actionItemArrow}>›</span>
           </Link>
         </div>
+
+        {notes.length > 0 && (
+          <div className={styles.notesListe}>
+            <div className={styles.sectionTitle}>Notes capturées</div>
+            <ul className={styles.notesItems}>
+              {notes.map((note, i) => (
+                <li key={i} className={styles.noteItem}>
+                  {note}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

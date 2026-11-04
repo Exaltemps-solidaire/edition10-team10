@@ -15,7 +15,14 @@ test("Démo : le cas passant", async ({ page }) => {
   await test.step("Je capture ce que j'entends, deux fois", async () => {
     const capture = page.getByText("Capturer ce que j'entends");
     await capture.click();
+    await page.getByPlaceholder("Ce que je retiens de l'échange...").fill("L'enfant est serein");
+    await page.getByText("Valider la note").click();
+    await expect(page.getByText("L'enfant est serein")).toBeVisible();
+
     await capture.click();
+    await page.getByPlaceholder("Ce que je retiens de l'échange...").fill("Le père est présent");
+    await page.getByText("Valider la note").click();
+    await expect(page.getByText("Le père est présent")).toBeVisible();
   });
 
   await test.step("Je rédige le rapport d'intervention", async () => {

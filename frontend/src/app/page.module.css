@@ -157,3 +157,56 @@
   border-radius: 999px;
   padding: 1px 8px;
 }
+
+.captureForm {
+  background: #fff;
+  border: 1px solid #e0e4e8;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.captureInput {
+  font-family: inherit;
+  font-size: 15px;
+  padding: 10px;
+  border: 1px solid #e0e4e8;
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.captureValider {
+  align-self: flex-end;
+  background: var(--appui);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.notesListe {
+  margin-top: 8px;
+}
+
+.notesItems {
+  margin: 0 16px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.noteItem {
+  background: #fff;
+  border: 1px solid #e0e4e8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--encre);
+}

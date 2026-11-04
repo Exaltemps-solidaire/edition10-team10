@@ -8,15 +8,26 @@ export function formatNotesCapturees(count: number): string {
   return `✦ Notes capturées : ${count} ${point} pendant l'échange`;
 }
 
-export function lireNotesCapturees(): number {
-  if (typeof window === "undefined") return 0;
-  const brut = window.localStorage.getItem(CLE_STOCKAGE);
-  const valeur = brut ? parseInt(brut, 10) : 0;
-  return Number.isNaN(valeur) ? 0 : valeur;
+export function ajouterNote(notes: string[], texte: string): string[] {
+  const texteNettoye = texte.trim();
+  if (texteNettoye === "") return notes;
+  return [...notes, texteNettoye];
 }
 
-export function incrementerNotesCapturees(): number {
-  const valeur = lireNotesCapturees() + 1;
-  window.localStorage.setItem(CLE_STOCKAGE, String(valeur));
-  return valeur;
+export function lireNotes(): string[] {
+  if (typeof window === "undefined") return [];
+  const brut = window.localStorage.getItem(CLE_STOCKAGE);
+  if (!brut) return [];
+  try {
+    const valeur = JSON.parse(brut);
+    return Array.isArray(valeur) ? valeur : [];
+  } catch {
+    return [];
+  }
+}
+
+export function enregistrerNote(texte: string): string[] {
+  const notes = ajouterNote(lireNotes(), texte);
+  window.localStorage.setItem(CLE_STOCKAGE, JSON.stringify(notes));
+  return notes;
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { formatNotesCapturees, lireNotesCapturees } from "../../lib/notes";
+import { formatNotesCapturees, lireNotes } from "../../lib/notes";
 import styles from "./page.module.css";
 
 const RAPPORT =
@@ -11,7 +11,7 @@ const RAPPORT =
 export default function Rapport() {
   const [envoye, setEnvoye] = useState(false);
   const [notesCapturees] = useState(() =>
-    typeof window === "undefined" ? 0 : lireNotesCapturees(),
+    typeof window === "undefined" ? 0 : lireNotes().length,
   );
 
   return (

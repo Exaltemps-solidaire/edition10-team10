@@ -114,9 +114,76 @@
     - `frontend/nginx.conf` : ajout de `'unsafe-inline'` à `script-src` dans la CSP — corrige l'hydratation React cassée depuis l'itération 1, bloquante pour tout clic de l'application (critères 1, 2, 3, et rétroactivement le critère 3 de l'itération 2).
     - `e2e/demo.spec.ts` : étape ajoutée (double capture + vérification du nombre sur l'écran 2).
 
+---
+
+## Replanification avant l'itération 4
+
+**Plan validé le 2026-11-04.**
+
+- **Temps restant annoncé** : 90 minutes, demandé le 2026-11-04.
+- **Durée du tour de test PM Lab** : non précisée par le développeur ; 10 minutes retenues par défaut (règle du `CLAUDE.md` racine de l'app quand le développeur ne sait pas). ⚠️ À confirmer si elle s'avère différente.
+- **Capacité** : chaque itération coûte au moins codage (≤10 min) + publication (~5 min) + tour de test (~10 min) = ~25 min. 90 min ÷ 25 min ⇒ **3 itérations au budget plein avec une petite marge** (~15 min).
+- ⚠️ **Changement de périmètre par rapport au plan initial** : le temps supplémentaire (90 min contre 30 min restantes avant l'itération 3) permet de reprendre un point jusqu'ici exclu — « l'agent IA de rédaction en vrai » (famille d'idées 2, 9 points, priorité n°2 de l'équipe). Je le remets dans le périmètre pour l'itération 5 ci-dessous, avec une nouvelle dépendance à signaler (❗️, voir cette itération).
+- **Toujours hors périmètre** : la capture audio réelle (Dictaphone/enregistrement — famille d'idées 1 au complet, sous-option la plus ambitieuse), la gestion de plusieurs dossiers/familles, l'envoi réel au magistrat.
+- Détaillées ci-dessous : itérations 4 et 5. La suite reste une liste ordonnée, à détailler au fil de l'eau.
+
+## Itération 4 : La capture devient une vraie note (texte), pas seulement un clic compté
+
+- **Dans le périmètre** :
+  - « Capturer ce que j'entends » ouvre un petit formulaire (un champ texte, inspiré de la « trame d'entretien » de la famille d'idées 1) au lieu d'incrémenter un compteur en un clic.
+  - Valider le formulaire ajoute la note à une liste réelle (persistée en local comme aujourd'hui), affichée sur l'écran 1.
+  - Le nombre de notes affiché sur l'écran 1 et la bannière de l'écran 2 restent corrects (dérivés de la liste, plus du seul compteur).
+- **Hors périmètre** : capture audio réelle, trame structurée à plusieurs champs (un seul champ texte libre suffit), édition ou suppression d'une note existante.
+- **Critères d'acceptation** :
+  - Étant donné l'écran 1, quand je clique « Capturer ce que j'entends », alors un formulaire avec un champ texte s'affiche, sans naviguer.
+  - Étant donné le formulaire ouvert, quand je saisis un texte et valide, alors la note s'ajoute à la liste affichée sur l'écran 1, le formulaire se ferme, et le nombre de notes augmente de 1.
+  - Étant donné une tentative de validation avec un champ vide, alors aucune note n'est ajoutée (pas d'erreur visible nécessaire, juste rien ne se passe).
+- **Hypothèse de l'équipe couverte** : aucune, non produite dans la passation.
+- **Codage estimé** : 9 minutes.
+- **Fichiers prévus** : `frontend/src/lib/notes.ts` (fonction `ajouterNote` pure + stockage de la liste au lieu du seul compteur), `frontend/src/lib/notes.test.ts`, `frontend/src/app/page.tsx` (formulaire + liste), `frontend/src/app/page.module.css`, `frontend/src/app/rapport/page.tsx` (lit la longueur de la liste au lieu du compteur).
+- **Tests unitaires prévus** : 2 à 3 tests Vitest sur `ajouterNote` (ajoute une note valide, rejette un texte vide/blanc, le compteur dérivé suit la taille de la liste).
+- **Étapes ajoutées à la démo** : ouvrir le formulaire, saisir un texte, valider, vérifier que la note apparaît dans la liste.
+- **Bilan** :
+  - Durée de codage réelle : 1 minute. Pas de dépassement, pas d'alarme.
+  - Critères d'acceptation satisfaits : les 3 (formulaire ouvert sans navigation, note ajoutée à la liste visible sur l'écran 1 et compteur +1, validation avec un champ vide n'ajoute rien).
+  - `npm test` : 6 tests passent (3 existants + 3 nouveaux sur `ajouterNote` : ajout valide, texte vide/blanc ignoré, espaces nettoyés).
+  - `npm run build` (Next.js) : compile et type-check sans erreur.
+  - Contrat de déployabilité : `./scripts/verifier-deployabilite.sh` → aucune borne, aucune alarme.
+  - Déploiement : plateforme relancée (arrêtée au début de session), base `team10` recréée, image frontend reconstruite et republiée (`localhost:5000/team10/frontend:dev`), API inchangée donc pas reconstruite. `podman compose ... up -d --force-recreate`. `localhost:8080/`, `/health`, `/sante`, `localhost:8081/health`, `/sante` tous à 200. CSP de l'itération 3 toujours en place (`script-src 'self' 'unsafe-inline'`).
+  - Version 4 signalée à PM Lab avec succès (`moteur_avance: false`).
+  - Démo (`e2e/demo.spec.ts`) mise à jour (ouverture du formulaire, saisie, validation, vérification de la note affichée — deux fois), **vérifiée en clic réel** (headless, leçon de l'itération 3) : verte.
+  - ⚠️ La démo ne tourne pas en mode `--headed` sur cette machine (pas de serveur X / `$DISPLAY`) : lancée en headless (`npx playwright test e2e/demo.spec.ts`) à la place du script `npm run demo`, qui force `--headed`. À signaler si une itération future a besoin du mode visuel.
+  - Rien n'a été bloqué par le harnais.
+  - **Modifications** :
+    - `frontend/src/lib/notes.ts` : remplace le compteur par une liste de notes (`ajouterNote` pure, `lireNotes`/`enregistrerNote` en JSON dans `localStorage`), garde `formatNotesCapturees` inchangée (critères 1, 2).
+    - `frontend/src/lib/notes.test.ts` : 3 tests Vitest sur `ajouterNote` (critère DoD point 2).
+    - `frontend/src/app/page.tsx` : le bouton « Capturer ce que j'entends » ouvre un formulaire (texte libre) au lieu d'incrémenter directement ; liste des notes affichée sous les actions (critères 1, 2).
+    - `frontend/src/app/page.module.css` : styles du formulaire et de la liste de notes (critère 1).
+    - `frontend/src/app/rapport/page.tsx` : le nombre affiché dérive de `lireNotes().length` au lieu de l'ancien compteur (critère 3 — compatibilité).
+    - `e2e/demo.spec.ts` : étapes de capture réécrites pour remplir et valider le formulaire (au lieu d'un simple clic répété).
+
+## Itération 5 : Le rapport est généré à partir des notes capturées, par le LLM de la plateforme
+
+- ❗️ **Dépendance nouvelle** : appel à `llm.internal` (passerelle LLM de la plateforme, en `key-auth`). Avant de coder, vérifier dans `/srv/team10/core-platform/core-platform/README.md` le chemin du secret dans OpenBao et le format d'appel attendu ; la machine tourne en mode **anthropic**, donc seule une route de type `task:chat`/complétion est utilisable — pas `task:image`, pas d'embeddings (pas de clé OpenAI fournie, et pas nécessaire ici). Si la clé ou la route n'est pas joignable dans le budget de l'itération, je le signale et on retombe sur le texte figé.
+- **Dans le périmètre** :
+  - Nouvelle route API (`api/`, port 8081) qui prend les notes capturées (envoyées par le front) et appelle `llm.internal` pour produire un texte de rapport.
+  - L'écran 2 appelle cette route (en chemin relatif `/api/v1/...`) au lieu d'afficher le texte pré-rédigé en dur, et affiche un état de chargement pendant l'appel.
+  - Si l'appel échoue (401, timeout, quota équipe), repli sur le texte figé existant plutôt qu'un écran cassé.
+- **Hors périmètre** : mise en forme avancée du rapport, historique des rapports générés, réglage fin du prompt au-delà d'un premier essai raisonnable.
+- **Critères d'acceptation** :
+  - Étant donné au moins une note capturée, quand j'ouvre l'écran 2, alors le texte du rapport affiché est généré à partir du contenu réel des notes (pas le texte figé d'origine), avec un indicateur de chargement pendant l'appel.
+  - Étant donné zéro note capturée, quand j'ouvre l'écran 2, alors un texte de repli raisonnable s'affiche (pas d'erreur visible).
+  - Étant donné un échec de l'appel LLM (simulable en coupant la route), alors l'écran affiche le texte figé de repli au lieu de planter.
+- **Hypothèse de l'équipe couverte** : aucune, non produite dans la passation.
+- **Codage estimé** : 10 minutes (plafond — c'est la plus grosse itération du lot ; si ça déborde, le repli texte figé reste la version publiée).
+- **Fichiers prévus** : `api/` (nouvelle route, ex. `src/routes/rapport.*` selon le squelette existant), `frontend/src/app/rapport/page.tsx` (appel à l'API + état de chargement + repli), `.env.example` (si une variable de config est nécessaire côté API, sans jamais y mettre la clé elle-même).
+- **Tests unitaires prévus** : 1 à 2 tests sur la fonction pure qui construit le prompt à partir des notes (pas de test sur l'appel réseau lui-même).
+- **Étapes ajoutées à la démo** : capturer une note, ouvrir le rapport, vérifier qu'un texte apparaît après le chargement.
+- **Bilan** : _à remplir en fin d'itération._
+
 ## À venir (non détaillé)
 
-- Rendre le texte du rapport réellement généré (dépendance nouvelle : accès LLM via `llm.internal` — à signaler ❗️ le moment venu).
 - Rendre la capture audio réelle (Dictaphone / enregistrement d'entretien — famille d'idées 1 au complet).
 - Gérer plusieurs dossiers/familles au lieu du seul cas « Famille Martin ».
 - Envoi réel au magistrat (ou simulation plus poussée que le clic actuel).
+- Stabilisation finale pour le pitch, quand le temps restant ne permet plus qu'une itération.
